@@ -57,13 +57,17 @@
           - df: DataFrame containing the data with columns 'Key1', 'Key2'.
 
           Output:
-          - Updates the HTML list with unique group names and displays the total count of user groups.
+          - Updates the HTML list with unique group names (with "Default" group appearing first) and displays the total count of user groups.
         */
         let groupRows = df.query(df["Key1"].eq("Group"));
         let groupsGrouped = groupRows.groupby(["Key2"]);
         let uniqueGroups = groupRows["Key2"].unique().values;
         groupsList.innerHTML = ""; // Clear previous list
         uniqueGroups.sort(); // Sort groups alphabetically
+        // Ensure "Default" group appears first if it exists
+        if (uniqueGroups.includes("Default")) {
+          uniqueGroups = ["Default", ...uniqueGroups.filter(group => group !== "Default")];
+        }
         uniqueGroups.forEach(groupName => {
           let listItem = document.createElement("li");
           listItem.textContent = groupName;
@@ -72,6 +76,7 @@
         let groupCount = document.createElement("p");
         groupCount.textContent = `Total User Groups: ${uniqueGroups.length}`;
         groupsList.appendChild(groupCount);
+        return uniqueGroups;
       }
 
 
@@ -99,6 +104,8 @@
           Usage:
           Use this function to visually represent which user groups have permissions for specific modules / tables.
         */
+        const disclaimer = document.createElement("p");
+        disclaimer.textContent = "This table shows which user groups have access to specific modules (tables). A 'Yes' indicates the presence of explicit settings in the Registry, while a 'No' indicates no explicit permissions found.";
         const table = document.createElement("table");
         const headerRow = document.createElement("tr");
 
@@ -153,8 +160,8 @@
               fileInfo.textContent = `Loaded CSV file: ${file.name} with ${df.shape[0]} rows and ${df.shape[1]} columns.`;
             }
             // Proceed with processing the DataFrame
-            getGroupsList(df);
-            createGroupPermissionTable(df, df.query(df["Key1"].eq("Group"))["Key2"].unique().values);
+            const uniqueGroups = getGroupsList(df);
+            createGroupPermissionTable(df, uniqueGroups);
           })
           .catch(err => {
             console.error("Error loading CSV:", err);
