@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EMu Registry Translator</title>
     <script src="https://cdn.jsdelivr.net/npm/danfojs@1.2.0/lib/bundle.min.js"></script>
-    <link rel="stylesheet" href="style.css">
   </head>
 
   <body>
@@ -21,9 +20,6 @@
 
     <h2>Group Module Access</h2>
     <div id="groupPermTable"></div>
-
-    <h2>Group Explanations</h2>
-    <div id="groupSection"></div>
 
     <!-- <p>The CSV file should have the following columns:</p>
     <ul>
@@ -42,7 +38,138 @@
       <li>Value</li>
     </ul> -->
 
-    <script src="script.js"></script>
+
+    <script>
+      const minCols = [
+        "irn", "levels", "key1", "key2", "key3", "key4",
+        "key5", "key6", "key7", "key8", "key9", "key10", "value"
+      ].map(col => col.toLowerCase());
+      const fileInfo = document.getElementById("fileInfo");
+      const groupsList = document.getElementById("groupsList");
+      const groupPermTable = document.getElementById("groupPermTable");
+
+      function getGroupsList(df) {
+        /*
+          Purpose:
+          Extracts unique user groups from the DataFrame where Key1 is "Group" and Key2 is the group name.
+
+          Parameters:
+          - df: DataFrame containing the data with columns 'Key1', 'Key2'.
+
+          Output:
+          - Updates the HTML list with unique group names (with "Default" group appearing first) and displays the total count of user groups.
+        */
+        let groupRows = df.query(df["Key1"].eq("Group"));
+        let groupsGrouped = groupRows.groupby(["Key2"]);
+        let uniqueGroups = groupRows["Key2"].unique().values;
+        groupsList.innerHTML = ""; // Clear previous list
+        uniqueGroups.sort(); // Sort groups alphabetically
+        // Ensure "Default" group appears first if it exists
+        if (uniqueGroups.includes("Default")) {
+          uniqueGroups = ["Default", ...uniqueGroups.filter(group => group !== "Default")];
+        }
+        uniqueGroups.forEach(groupName => {
+          let listItem = document.createElement("li");
+          listItem.textContent = groupName;
+          groupsList.appendChild(listItem);
+        });
+        let groupCount = document.createElement("p");
+        groupCount.textContent = `Total User Groups: ${uniqueGroups.length}`;
+        groupsList.appendChild(groupCount);
+        return uniqueGroups;
+      }
+
+
+      function createGroupPermissionTable(df, uniqueGroups) {
+        /*
+          Purpose:
+          Generates a permissions HTML table displaying the presence of access settings for each module("table") per user group.
+
+          Parameters:
+        - df: DataFrame containing the data with columns 'Key1', 'Key2', 'Key3', and 'Key4'.
+          - uniqueGroups: Array of unique user group names extracted from the DataFrame.
+
+          Table Structure:
+        - Rows: Unique table names extracted from the 'Key4' field, filtered where 'Key3' is "Table" and 'Key1' is "Group".
+          - Columns: Unique user groups listed in 'uniqueGroups'.
+
+          Cell Logic:
+        - For each cell, filters the DataFrame where:
+        - 'Key1' equals "Group"
+          - 'Key2' equals the current group name
+            - 'Key3' equals "Table"
+              - Checks if the table name('Key4') exists for the current group.
+            - Marks cell as "Yes" (explicit setting present, colored green) or "No"(explicit setting absent, colored red).
+
+          Usage:
+          Use this function to visually represent which user groups have permissions for specific modules / tables.
+        */
+        const disclaimer = document.createElement("p");
+        disclaimer.textContent = "This table shows which user groups have access to specific modules (tables). A 'Yes' indicates the presence of explicit settings in the Registry, while a 'No' indicates no explicit permissions found.";
+        const table = document.createElement("table");
+        const headerRow = document.createElement("tr");
+
+        headerRow.innerHTML = "<th>Has Access to Module</th>" + uniqueGroups.map(group => `<th>${group}</th>`).join("");
+        table.appendChild(headerRow);
+
+        let uniqueTables = df.query(df["Key3"].eq("Table"))["Key4"].unique().values;
+
+        uniqueTables.forEach(tableName => {
+          const row = document.createElement("tr");
+          const tableCell = document.createElement("td");
+          tableCell.textContent = tableName;
+          row.appendChild(tableCell);
+
+          uniqueGroups.forEach(groupName => {
+            const cell = document.createElement("td");
+            let hasPermission = df.query(
+              df["Key1"].eq("Group")
+                .and(df["Key2"].eq(groupName))
+                .and(df["Key3"].eq("Table"))
+                .and(df["Key4"].eq(tableName))
+            ).shape[0] > 0;
+
+            cell.textContent = hasPermission ? "Yes" : "No";
+            cell.style.backgroundColor = hasPermission ? "lightgreen" : "lightcoral";
+            row.appendChild(cell);
+          });
+
+          table.appendChild(row);
+        });
+
+        groupPermTable.innerHTML = ""; // Clear previous table
+        groupPermTable.appendChild(table);
+      }
+
+      document.getElementById("loadFile").addEventListener("click", function () {
+        const fileInput = document.getElementById("fileInput");
+        if (fileInput.files.length === 0) {
+          alert("Please select a CSV file first.");
+          return;
+        }
+        const file = fileInput.files[0];
+        dfd.readCSV(file)
+          .then(df => {
+            // convert column names to lowercase for consistency
+            df.columns = df.columns.map(col => col.toLowerCase());
+            if (!minCols.every(col => df.columns.map(c => c.toLowerCase()).includes(col))) {
+              alert("CSV file is missing required columns: " + minCols.join(", "));
+              return;
+            } else {
+              console.log(`DataFrame loaded with ${df.shape[0]} rows and ${df.shape[1]} columns.`);
+              fileInfo.textContent = `Loaded CSV file: ${file.name} with ${df.shape[0]} rows and ${df.shape[1]} columns.`;
+            }
+            // Proceed with processing the DataFrame
+            const uniqueGroups = getGroupsList(df);
+            createGroupPermissionTable(df, uniqueGroups);
+          })
+          .catch(err => {
+            console.error("Error loading CSV:", err);
+          });
+      });
+
+
+    </script>
   </body>
 
 </html>
