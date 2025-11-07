@@ -26,6 +26,20 @@ function showLoadingSpinner(divName) {
   document.getElementById(divName).appendChild(spinner);
 }
 
+function getDuplicates(dataframe) {
+  let colsToCheck = dataframe.columns.filter((col) => col !== 'irn');
+  let grouped = dataframe.groupby(colsToCheck).count();
+  let countCol = grouped.columns[grouped.columns.length - 1];
+  let duplicateRows = grouped.query(grouped[countCol].gt(1));
+  if (duplicateRows.shape[0] === 0) return null; // Return null if no duplicates
+
+  let dupKeys = duplicateRows[colsToCheck].values;
+  let mask = dataframe[colsToCheck].apply((row) =>
+    dupKeys.some((keyArr) => keyArr.every((val, idx) => val === row[idx]))
+  );
+  return dataframe.loc({ rows: mask });
+}
+
 function getGroupsList(df) {
   /*
           Purpose:
@@ -151,6 +165,42 @@ function createGroupExplanation(df, uniqueGroups) {
         .and(df['Key3'].eq('Table Access'))
     )['Value'].values;
     let moduleList = document.createElement('ul');
+    // for each module in modulesArr, append the list of strings in 'value' column, where Key1 = "Group", Key2 = group name, Key3 = "Table", Key4 = module name, and Key5 = "Operations".
+    modulesArr.forEach((module) => {
+      // split module by semicolon and add each in new li
+      module
+        .split(';')
+        .sort()
+        .forEach((mod) => {
+          let moduleItem = document.createElement('li');
+          moduleItem.textContent = mod.trim();
+
+          // Create a nested ul for operations
+          let operationsList = document.createElement('ul');
+          let operationsArr = df.query(
+            df['Key1']
+              .eq('Group')
+              .and(df['Key2'].eq(group))
+              .and(df['Key3'].eq('Table'))
+              .and(df['Key4'].eq(mod.trim()))
+              .and(df['Key5'].eq('Operations'))
+          )['Value'].values;
+
+          operationsArr.forEach((operation) => {
+            let opItem = document.createElement('li');
+            opItem.textContent = operation;
+            operationsList.appendChild(opItem);
+          });
+
+          // Only append the nested list if there are operations
+          if (operationsArr.length > 0) {
+            moduleItem.appendChild(operationsList);
+          }
+
+          moduleList.appendChild(moduleItem);
+        });
+    });
+
     // if there are no modules, show a message
     if (modulesArr.length === 0) {
       let listItem = document.createElement('li');
@@ -203,6 +253,19 @@ document.getElementById('loadFile').addEventListener('click', function () {
         fileInfo.textContent = `Loaded CSV file: ${file.name} with ${df.shape[0]} rows and ${df.shape[1]} columns.`;
       }
       // Proceed with processing the DataFrame
+      const duplicatesDF = getDuplicates(df);
+      if (duplicatesDF && duplicatesDF.shape[0] > 0) {
+        console.warn(
+          `Found ${duplicatesDF.shape[0]} duplicate registry settings:`
+        );
+        console.table(duplicatesDF.values);
+        alert(
+          `Warning: Found ${duplicatesDF.shape[0]} duplicate registry settings. Check console for details.`
+        );
+      } else {
+        console.log('No duplicate registry settings found.');
+      }
+
       const uniqueGroups = getGroupsList(df);
       createGroupPermissionTable(df, uniqueGroups);
       createGroupExplanation(df, uniqueGroups);
