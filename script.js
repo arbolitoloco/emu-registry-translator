@@ -17,6 +17,13 @@ const fileInfo = document.getElementById('fileInfo');
 const groupsList = document.getElementById('groupsList');
 const groupPermTable = document.getElementById('groupPermTable');
 const groupSection = document.getElementById('groupSection');
+const toolAccessSection = document.getElementById('toolAccessSection');
+const unmatchedSection = document.getElementById('unmatchedSection');
+
+// Entries that describe "tool" access on the Catalogue module: the four
+// tool-specific privileges added in EMu 6.1, plus daReplace which grants
+// access to all of them (see the Operations Registry entry documentation).
+const CATALOGUE_TOOL_PRIVS = ['daReplace', 'daRelocate', 'daRecondition', 'daReidentify', 'daRevalue'];
 
 // Show loading spinner
 function showLoadingSpinner(divName) {
@@ -52,7 +59,6 @@ function getGroupsList(df) {
           - Updates the HTML list with unique group names (with "Default" group appearing first) and displays the total count of user groups.
         */
   let groupRows = df.query(df['Key1'].eq('Group'));
-  let groupsGrouped = groupRows.groupby(['Key2']);
   let uniqueGroups = groupRows['Key2'].unique().values;
 
   uniqueGroups.sort(); // Sort groups alphabetically
@@ -76,6 +82,12 @@ function getGroupsList(df) {
   groupCount.textContent = `Total User Groups: ${uniqueGroups.length}`;
 
   groupsList.appendChild(groupCount);
+
+  // Make the group list available to the entry-builder tool (for the name
+  // datalist) and other consumers.
+  window.currentUniqueGroups = uniqueGroups;
+  document.dispatchEvent(new CustomEvent('registry:groupsLoaded', { detail: { groups: uniqueGroups } }));
+
   return uniqueGroups;
 }
 
@@ -120,7 +132,7 @@ function createGroupPermissionTable(df, uniqueGroups) {
   uniqueTables.forEach((tableName) => {
     const row = document.createElement('tr');
     const tableCell = document.createElement('td');
-    tableCell.textContent = tableName;
+    tableCell.textContent = `${RegistryDefs.tableLabel(tableName)} (${tableName})`;
     row.appendChild(tableCell);
 
     uniqueGroups.forEach((groupName) => {
@@ -143,85 +155,184 @@ function createGroupPermissionTable(df, uniqueGroups) {
   });
 
   groupPermTable.innerHTML = ''; // Clear previous table
+  groupPermTable.appendChild(disclaimer);
   groupPermTable.appendChild(table);
 }
 
-// function getTabs(df, group) {
-// TODO
-// }
+/*
+  Follows the precedence chain documented in "The order in which Registry
+  entries are assigned" (EMu Registry manual, p.16-20): for Table/Column
+  settings, EMu looks for the most specific entry first and stops at the
+  first match - entries are NOT combined/merged.
+
+  This checks, in order:
+    Group|group|Table|table|Operations
+    Group|group|Table|Default|Operations
+    Group|Default|Table|table|Operations
+    Group|Default|Table|Default|Operations
+*/
+function resolveOperations(df, group, table) {
+  const candidates = [
+    [group, table],
+    [group, 'Default'],
+    ['Default', table],
+    ['Default', 'Default'],
+  ];
+  for (const [name, tbl] of candidates) {
+    const rows = df.query(
+      df['Key1']
+        .eq('Group')
+        .and(df['Key2'].eq(name))
+        .and(df['Key3'].eq('Table'))
+        .and(df['Key4'].eq(tbl))
+        .and(df['Key5'].eq('Operations'))
+    );
+    if (rows.shape[0] > 0) {
+      const values = rows['Value'].values.join(';');
+      return {
+        source: `Group|${name}|Table|${tbl}|Operations`,
+        privs: RegistryDefs.splitList(values),
+      };
+    }
+  }
+  return null;
+}
+
+function createToolAccessSummary(df, uniqueGroups) {
+  /*
+    Purpose:
+    Directly answers "which groups can use tool X" questions (e.g. the
+    Relocate Tool) by resolving Operations privileges per group for the
+    Catalogue module, following the same precedence EMu itself uses, and
+    accounting for daReplace implicitly granting the other catalogue tools.
+  */
+  toolAccessSection.innerHTML = '';
+
+  const intro = document.createElement('p');
+  intro.textContent =
+    'These tool privileges apply to the Catalogue module. A group has a tool if it has the specific privilege, or has Global Replace (which grants all of them). Resolution follows EMu\'s own precedence: group+table, then group+Default table, then Default group+table, then Default group+Default table.';
+  toolAccessSection.appendChild(intro);
+
+  const table = document.createElement('table');
+  const headerRow = document.createElement('tr');
+  headerRow.innerHTML =
+    '<th>Tool</th>' + uniqueGroups.map((g) => `<th>${g}</th>`).join('');
+  table.appendChild(headerRow);
+
+  CATALOGUE_TOOL_PRIVS.forEach((privId) => {
+    const priv = RegistryDefs.OPERATIONS_BY_ID[privId];
+    const row = document.createElement('tr');
+    const labelCell = document.createElement('td');
+    labelCell.textContent = priv.label;
+    labelCell.title = priv.description;
+    row.appendChild(labelCell);
+
+    uniqueGroups.forEach((groupName) => {
+      const cell = document.createElement('td');
+      const resolved = resolveOperations(df, groupName, 'ecatalogue');
+      const hasDirectly = resolved && resolved.privs.includes(privId);
+      const hasViaReplace = privId !== 'daReplace' && resolved && resolved.privs.includes('daReplace');
+      const has = hasDirectly || hasViaReplace;
+
+      cell.textContent = has ? 'Yes' : 'No';
+      cell.style.backgroundColor = has ? 'lightgreen' : 'lightcoral';
+      if (has && resolved) {
+        cell.title = hasViaReplace
+          ? `Granted via Global Replace (${resolved.source})`
+          : `Set directly (${resolved.source})`;
+      }
+      row.appendChild(cell);
+    });
+
+    table.appendChild(row);
+  });
+
+  toolAccessSection.appendChild(table);
+}
+
+// Human-friendly labels for each entry type, used as section headings when
+// grouping a group's settings by category.
+const ENTRY_TYPE_HEADINGS = {
+  table_access: 'Module Access',
+  operations: 'Actions & Tools per Module',
+  column_access: 'Field-level Permissions',
+  column_access_modifier: 'Conditional Field Permissions',
+  tabs_default: 'Default Tabs',
+  tabs_switching: 'Dynamic Tab Switching',
+  insert_tab_order: 'Tab Order (Display/New/Edit)',
+  query_tab_order: 'Tab Order (Search)',
+  group_membership: 'Group Membership',
+  name: 'Display Name',
+};
 
 function createGroupExplanation(df, uniqueGroups) {
   groupSection.innerHTML = '';
+  let unmatchedCount = 0;
+
   uniqueGroups.forEach((group) => {
-    let groupInfo = document.createElement('div');
-    let itemAnchor = `${group.replace(/\s+/g, '-')}`;
+    const groupInfo = document.createElement('div');
+    const itemAnchor = `${group.replace(/\s+/g, '-')}`;
     groupInfo.classList.add('group-info');
-    groupInfo.innerHTML = `<h3 id="${itemAnchor}">${group}</h3><p>Modules with specific access settings:</p>`;
-    // show values (column "Value") listed for each group (look in column "Key4), where Key 1 = "Group", Key2 = group name, and Key 3 = "Table Access".
-    let modulesArr = df.query(
-      df['Key1']
-        .eq('Group')
-        .and(df['Key2'].eq(group))
-        .and(df['Key3'].eq('Table Access'))
-    )['Value'].values;
-    let moduleList = document.createElement('ul');
-    // for each module in modulesArr, append the list of strings in 'value' column, where Key1 = "Group", Key2 = group name, Key3 = "Table", Key4 = module name, and Key5 = "Operations".
-    modulesArr.forEach((module) => {
-      // split module by semicolon and add each in new li
-      module
-        .split(';')
-        .sort()
-        .forEach((mod) => {
-          let moduleItem = document.createElement('li');
-          moduleItem.textContent = mod.trim();
+    groupInfo.innerHTML = `<h3 id="${itemAnchor}">${group}</h3>`;
 
-          // Create a nested ul for operations
-          let operationsList = document.createElement('ul');
-          let operationsArr = df.query(
-            df['Key1']
-              .eq('Group')
-              .and(df['Key2'].eq(group))
-              .and(df['Key3'].eq('Table'))
-              .and(df['Key4'].eq(mod.trim()))
-              .and(df['Key5'].eq('Operations'))
-          )['Value'].values;
+    const groupRows = df.query(df['Key1'].eq('Group').and(df['Key2'].eq(group)));
 
-          operationsArr.forEach((operation) => {
-            let opItem = document.createElement('li');
-            opItem.textContent = operation;
-            operationsList.appendChild(opItem);
-          });
+    // Bucket every row for this group by which entry type it matches.
+    const buckets = {};
+    const rawRows = groupRows.values; // array of arrays, in column order
+    const cols = groupRows.columns;
 
-          // Only append the nested list if there are operations
-          if (operationsArr.length > 0) {
-            moduleItem.appendChild(operationsList);
-          }
-
-          moduleList.appendChild(moduleItem);
-        });
-    });
-
-    // if there are no modules, show a message
-    if (modulesArr.length === 0) {
-      let listItem = document.createElement('li');
-      listItem.innerHTML =
-        'No module access settings specified. See <a href="#Default">Default</a> to see what applies.';
-      moduleList.appendChild(listItem);
+    for (let i = 0; i < rawRows.length; i++) {
+      const rowObj = {};
+      cols.forEach((c, idx) => {
+        // RegistryDefs works off lowercase keys (key1..key10, value)
+        // regardless of how the DataFrame columns happen to be cased.
+        rowObj[c.toLowerCase()] = rawRows[i][idx];
+      });
+      const description = RegistryDefs.describeRow(rowObj);
+      if (!description) {
+        unmatchedCount++;
+        continue;
+      }
+      const match = RegistryDefs.classifyRow(rowObj);
+      const typeId = match.entryType.id;
+      if (!buckets[typeId]) buckets[typeId] = [];
+      buckets[typeId].push(description);
     }
-    modulesArr.forEach((module) => {
-      // split module by semicolon and add each in new li
-      module
-        .split(';')
-        .sort()
-        .forEach((mod) => {
-          let listItem = document.createElement('li');
-          listItem.textContent = mod.trim();
-          moduleList.appendChild(listItem);
+
+    if (Object.keys(buckets).length === 0) {
+      const p = document.createElement('p');
+      p.innerHTML =
+        'No explicit settings for this group. See <a href="#Default">Default</a> to see what applies.';
+      groupInfo.appendChild(p);
+    } else {
+      Object.keys(ENTRY_TYPE_HEADINGS).forEach((typeId) => {
+        if (!buckets[typeId]) return;
+        const heading = document.createElement('h4');
+        heading.textContent = ENTRY_TYPE_HEADINGS[typeId];
+        groupInfo.appendChild(heading);
+
+        const list = document.createElement('ul');
+        buckets[typeId].sort().forEach((desc) => {
+          const li = document.createElement('li');
+          li.textContent = desc;
+          list.appendChild(li);
         });
-    });
-    groupInfo.appendChild(moduleList);
+        groupInfo.appendChild(list);
+      });
+    }
+
     groupSection.appendChild(groupInfo);
   });
+
+  if (unmatchedSection) {
+    unmatchedSection.innerHTML = '';
+    if (unmatchedCount > 0) {
+      const p = document.createElement('p');
+      p.textContent = `${unmatchedCount} Registry row(s) for these groups did not match a recognized permission shape (e.g. System-wide settings, or entry types this tool doesn't interpret yet). They are still included in exports/searches you do directly in EMu.`;
+      unmatchedSection.appendChild(p);
+    }
+  }
 }
 
 document.getElementById('loadFile').addEventListener('click', function () {
@@ -266,8 +377,21 @@ document.getElementById('loadFile').addEventListener('click', function () {
         console.log('No duplicate registry settings found.');
       }
 
+      // Restore title-case column names expected by the query helpers below
+      // (Key1..Key10, Value) while keeping a lowercase lookup available.
+      const titleCased = df.columns.map((c) => {
+        const m = c.match(/^key(\d+)$/);
+        if (m) return `Key${m[1]}`;
+        if (c === 'value') return 'Value';
+        if (c === 'irn') return 'irn';
+        if (c === 'levels') return 'Levels';
+        return c;
+      });
+      df.columns = titleCased;
+
       const uniqueGroups = getGroupsList(df);
       createGroupPermissionTable(df, uniqueGroups);
+      createToolAccessSummary(df, uniqueGroups);
       createGroupExplanation(df, uniqueGroups);
     })
     .catch((err) => {

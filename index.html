@@ -5,44 +5,99 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EMu Registry Translator</title>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/danfojs@1.2.0/lib/bundle.min.js"></script>
   </head>
 
   <body>
-    <h1>EMu Registry Translator Tools</h1>
-    <p>Upload a CSV file with your Registry records and visualize your settings.</p>
-    <input type="file" id="fileInput" accept=".csv" />
-    <button id="loadFile">Load Selected CSV</button>
-    <p id="fileInfo"></p>
+    <header class="app-header">
+      <div class="key-trail" aria-hidden="true">
+        <span>Group</span><span class="pipe">|</span><span>Managers</span><span class="pipe">|</span><span>Table</span><span class="pipe">|</span><span>ecatalogue</span><span class="pipe">|</span><span>Operations</span>
+      </div>
+      <h1>EMu Registry Translator</h1>
+      <p class="subtitle">Turn raw Registry rows into plain-English permissions, and build new entries without memorizing the Key structure.</p>
+    </header>
 
-    <h2>User Groups</h2>
-    <ul id="groupsList"></ul>
+    <main>
+      <section class="panel" id="uploadPanel">
+        <h2><span class="step-index">1</span> Load a Registry export</h2>
+        <p>Upload a CSV file with your Registry records (columns: irn, Levels, Key1–Key10, Value) to visualize your settings.</p>
+        <div class="upload-row">
+          <input type="file" id="fileInput" accept=".csv" />
+          <button id="loadFile" class="btn-primary">Load Selected CSV</button>
+        </div>
+        <p id="fileInfo" class="file-info"></p>
+      </section>
 
-    <h2>Groups Module Access</h2>
-    <div id="groupPermTable"></div>
+      <section class="panel">
+        <h2>User Groups</h2>
+        <ul id="groupsList"></ul>
+      </section>
 
-    <h2>Groups Modules Explanations</h2>
-    <div id="groupSection"></div>
+      <section class="panel">
+        <h2>Groups Module Access</h2>
+        <div id="groupPermTable"></div>
+      </section>
 
-    <!-- <p>The CSV file should have the following columns:</p>
-    <ul>
-      <li>irn</li>
-      <li>Levels</li>
-      <li>Key1</li>
-      <li>Key2</li>
-      <li>Key3</li>
-      <li>Key4</li>
-      <li>Key5</li>
-      <li>Key6</li>
-      <li>Key7</li>
-      <li>Key8</li>
-      <li>Key9</li>
-      <li>Key10</li>
-      <li>Value</li>
-    </ul> -->
+      <section class="panel">
+        <h2>Catalogue Tool Access</h2>
+        <div id="toolAccessSection"></div>
+      </section>
 
+      <section class="panel">
+        <h2>Group Settings, Explained</h2>
+        <div id="groupSection"></div>
+        <div id="unmatchedSection"></div>
+      </section>
 
+      <section class="panel" id="builderPanel">
+        <h2><span class="step-index">2</span> Build a Registry entry</h2>
+        <p>Pick who the entry is for, what you want to configure, and fill in the fields — the Registry entry is generated for you.</p>
+
+        <div class="builder-form">
+          <div class="field-row">
+            <div class="field">
+              <label for="builderScope">Give to</label>
+              <select id="builderScope">
+                <option value="Group">User Group</option>
+                <option value="User">Individual User</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="builderName">Name</label>
+              <input type="text" id="builderName" list="builderNameList" placeholder="e.g. Managers, or a username">
+              <datalist id="builderNameList"></datalist>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="builderEntryType">What do you want to configure?</label>
+            <select id="builderEntryType"></select>
+          </div>
+
+          <div id="builderDynamicFields" class="dynamic-fields"></div>
+
+          <p id="builderWarning" class="builder-warning"></p>
+
+          <div id="builderPreview" class="builder-preview"></div>
+
+          <button id="builderAddBtn" class="btn-primary" disabled>Add to list</button>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Entries to add</h2>
+        <div id="builderList"></div>
+        <div class="builder-actions">
+          <button id="builderExportBtn" class="btn-secondary" disabled>Export as CSV</button>
+          <button id="builderClearBtn" class="btn-text">Clear list</button>
+        </div>
+      </section>
+    </main>
+
+    <script src="registryDefinitions.js"></script>
     <script src="script.js"></script>
+    <script src="builder.js"></script>
   </body>
 
 </html>
