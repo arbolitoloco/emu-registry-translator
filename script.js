@@ -221,7 +221,7 @@ function createToolAccessSummary(df, uniqueGroups) {
   const intro = document.createElement('p');
   intro.textContent =
     "These tool privileges apply to the Catalogue module. A group has a tool if it has the specific privilege, or has Global Replace (which grants all of them). Resolution follows EMu's own precedence: group+table, then group+Default table, then Default group+table, then Default group+Default table.";
-  toolAccessSection.appendChild(intro);
+  toolAccessSection.parentElement?.insertBefore(intro, toolAccessSection);
 
   const table = document.createElement('table');
   const headerRow = document.createElement('tr');
@@ -413,3 +413,13 @@ document.getElementById('loadFile').addEventListener('click', function () {
       console.error('Error loading CSV:', err);
     });
 });
+
+const backToTopBtn = document.getElementById('backToTop');
+if (backToTopBtn) {
+  window.addEventListener('scroll', () => {
+    backToTopBtn.classList.toggle('visible', window.scrollY > 400);
+  });
+  backToTopBtn.addEventListener('click', () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+}
