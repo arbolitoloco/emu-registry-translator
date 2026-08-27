@@ -23,7 +23,13 @@ const unmatchedSection = document.getElementById('unmatchedSection');
 // Entries that describe "tool" access on the Catalogue module: the four
 // tool-specific privileges added in EMu 6.1, plus daReplace which grants
 // access to all of them (see the Operations Registry entry documentation).
-const CATALOGUE_TOOL_PRIVS = ['daReplace', 'daRelocate', 'daRecondition', 'daReidentify', 'daRevalue'];
+const CATALOGUE_TOOL_PRIVS = [
+  'daReplace',
+  'daRelocate',
+  'daRecondition',
+  'daReidentify',
+  'daRevalue',
+];
 
 // Show loading spinner
 function showLoadingSpinner(divName) {
@@ -42,7 +48,7 @@ function getDuplicates(dataframe) {
 
   let dupKeys = duplicateRows[colsToCheck].values;
   let mask = dataframe[colsToCheck].apply((row) =>
-    dupKeys.some((keyArr) => keyArr.every((val, idx) => val === row[idx]))
+    dupKeys.some((keyArr) => keyArr.every((val, idx) => val === row[idx])),
   );
   return dataframe.loc({ rows: mask });
 }
@@ -86,7 +92,11 @@ function getGroupsList(df) {
   // Make the group list available to the entry-builder tool (for the name
   // datalist) and other consumers.
   window.currentUniqueGroups = uniqueGroups;
-  document.dispatchEvent(new CustomEvent('registry:groupsLoaded', { detail: { groups: uniqueGroups } }));
+  document.dispatchEvent(
+    new CustomEvent('registry:groupsLoaded', {
+      detail: { groups: uniqueGroups },
+    }),
+  );
 
   return uniqueGroups;
 }
@@ -143,7 +153,7 @@ function createGroupPermissionTable(df, uniqueGroups) {
             .eq('Group')
             .and(df['Key2'].eq(groupName))
             .and(df['Key3'].eq('Table'))
-            .and(df['Key4'].eq(tableName))
+            .and(df['Key4'].eq(tableName)),
         ).shape[0] > 0;
 
       cell.textContent = hasPermission ? 'Yes' : 'No';
@@ -153,9 +163,9 @@ function createGroupPermissionTable(df, uniqueGroups) {
 
     table.appendChild(row);
   });
-
+  // Append the disclaimer above the table groupPermTable div
+  groupPermTable.insertAdjacentElement('beforebegin', disclaimer);
   groupPermTable.innerHTML = ''; // Clear previous table
-  groupPermTable.appendChild(disclaimer);
   groupPermTable.appendChild(table);
 }
 
@@ -185,7 +195,7 @@ function resolveOperations(df, group, table) {
         .and(df['Key2'].eq(name))
         .and(df['Key3'].eq('Table'))
         .and(df['Key4'].eq(tbl))
-        .and(df['Key5'].eq('Operations'))
+        .and(df['Key5'].eq('Operations')),
     );
     if (rows.shape[0] > 0) {
       const values = rows['Value'].values.join(';');
@@ -210,7 +220,7 @@ function createToolAccessSummary(df, uniqueGroups) {
 
   const intro = document.createElement('p');
   intro.textContent =
-    'These tool privileges apply to the Catalogue module. A group has a tool if it has the specific privilege, or has Global Replace (which grants all of them). Resolution follows EMu\'s own precedence: group+table, then group+Default table, then Default group+table, then Default group+Default table.';
+    "These tool privileges apply to the Catalogue module. A group has a tool if it has the specific privilege, or has Global Replace (which grants all of them). Resolution follows EMu's own precedence: group+table, then group+Default table, then Default group+table, then Default group+Default table.";
   toolAccessSection.appendChild(intro);
 
   const table = document.createElement('table');
@@ -231,7 +241,10 @@ function createToolAccessSummary(df, uniqueGroups) {
       const cell = document.createElement('td');
       const resolved = resolveOperations(df, groupName, 'ecatalogue');
       const hasDirectly = resolved && resolved.privs.includes(privId);
-      const hasViaReplace = privId !== 'daReplace' && resolved && resolved.privs.includes('daReplace');
+      const hasViaReplace =
+        privId !== 'daReplace' &&
+        resolved &&
+        resolved.privs.includes('daReplace');
       const has = hasDirectly || hasViaReplace;
 
       cell.textContent = has ? 'Yes' : 'No';
@@ -275,7 +288,9 @@ function createGroupExplanation(df, uniqueGroups) {
     groupInfo.classList.add('group-info');
     groupInfo.innerHTML = `<h3 id="${itemAnchor}">${group}</h3>`;
 
-    const groupRows = df.query(df['Key1'].eq('Group').and(df['Key2'].eq(group)));
+    const groupRows = df.query(
+      df['Key1'].eq('Group').and(df['Key2'].eq(group)),
+    );
 
     // Bucket every row for this group by which entry type it matches.
     const buckets = {};
@@ -352,14 +367,14 @@ document.getElementById('loadFile').addEventListener('click', function () {
       df.columns = df.columns.map((col) => col.toLowerCase());
       if (
         !minCols.every((col) =>
-          df.columns.map((c) => c.toLowerCase()).includes(col)
+          df.columns.map((c) => c.toLowerCase()).includes(col),
         )
       ) {
         alert('CSV file is missing required columns: ' + minCols.join(', '));
         return;
       } else {
         console.log(
-          `DataFrame loaded with ${df.shape[0]} rows and ${df.shape[1]} columns.`
+          `DataFrame loaded with ${df.shape[0]} rows and ${df.shape[1]} columns.`,
         );
         fileInfo.textContent = `Loaded CSV file: ${file.name} with ${df.shape[0]} rows and ${df.shape[1]} columns.`;
       }
@@ -367,11 +382,11 @@ document.getElementById('loadFile').addEventListener('click', function () {
       const duplicatesDF = getDuplicates(df);
       if (duplicatesDF && duplicatesDF.shape[0] > 0) {
         console.warn(
-          `Found ${duplicatesDF.shape[0]} duplicate registry settings:`
+          `Found ${duplicatesDF.shape[0]} duplicate registry settings:`,
         );
         console.table(duplicatesDF.values);
         alert(
-          `Warning: Found ${duplicatesDF.shape[0]} duplicate registry settings. Check console for details.`
+          `Warning: Found ${duplicatesDF.shape[0]} duplicate registry settings. Check console for details.`,
         );
       } else {
         console.log('No duplicate registry settings found.');

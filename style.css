@@ -65,6 +65,18 @@ main {
   padding: 0.15rem 0.4rem;
 }
 
+.key-trail a {
+  color: var(--brass);
+  text-decoration: none;
+  padding: 0.15rem 0.4rem;
+}
+
+.key-trail a:hover,
+.key-trail a:focus-visible {
+  color: var(--paper);
+  text-decoration: underline;
+}
+
 .key-trail .pipe {
   padding: 0.15rem 0;
   color: rgba(244, 239, 228, 0.35);
@@ -267,6 +279,48 @@ td code {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   word-break: break-all;
+}
+
+/* ---------- Group permission table (scroll with frozen header/first column) ---------- */
+
+#groupPermTable {
+  max-width: 100%;
+  max-height: 65vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+#groupPermTable table {
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 0;
+}
+
+#groupPermTable th,
+#groupPermTable td {
+  white-space: nowrap;
+}
+
+#groupPermTable th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--paper);
+}
+
+#groupPermTable th:first-child,
+#groupPermTable td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--paper-raised);
+}
+
+#groupPermTable th:first-child {
+  z-index: 3;
 }
 
 .hint {
