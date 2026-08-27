@@ -33,10 +33,18 @@ const CATALOGUE_TOOL_PRIVS = [
 
 // Show loading spinner
 function showLoadingSpinner(divName) {
-  const spinner = document.createElement('div');
-  spinner.className = 'spinner';
-  spinner.innerHTML = 'Loading data...';
-  document.getElementById(divName).appendChild(spinner);
+  const wrapper = document.createElement('div');
+  wrapper.className = 'spinner-wrapper';
+
+  const icon = document.createElement('div');
+  icon.className = 'spinner';
+
+  const label = document.createElement('span');
+  label.textContent = 'Loading data...';
+
+  wrapper.appendChild(icon);
+  wrapper.appendChild(label);
+  document.getElementById(divName).appendChild(wrapper);
 }
 
 function getDuplicates(dataframe) {
