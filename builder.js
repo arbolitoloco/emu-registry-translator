@@ -421,6 +421,47 @@
     return null;
   }
 
+  // Some Operations privileges (e.g. the Relocate tool) only work if the
+  // group/user also has Global Replace Column Access on specific fields.
+  // Given a built { keys, value } for an Operations entry, returns the
+  // { keys, value, pipe, description } entries that should be auto-added
+  // alongside it (skipping any already present in builderEntries).
+  function computeAutoColumnAccessEntries(built) {
+    const type = currentEntryType();
+    if (type.id !== 'operations' || !built) return [];
+
+    const [scope, name, , table] = built.keys;
+    const privs = RegistryDefs.splitList(built.value);
+    const result = [];
+
+    privs.forEach((privId) => {
+      const priv = RegistryDefs.OPERATIONS_BY_ID[privId];
+      if (!priv || !priv.requiredColumnAccess) return;
+
+      priv.requiredColumnAccess.forEach((column) => {
+        const keys = [scope, name, 'Table', table, 'Column Access', column];
+        const keyPath = keys.join('|').toLowerCase();
+        const alreadyPresent =
+          builderEntries.some((e) => e.keys.join('|').toLowerCase() === keyPath) ||
+          result.some((e) => e.keys.join('|').toLowerCase() === keyPath);
+        if (alreadyPresent) return;
+
+        const value = 'duReplace';
+        const pipe = RegistryDefs.toPipeString(keys, value);
+        const rowObj = {};
+        keys.forEach((k, i) => (rowObj[`key${i + 1}`] = k));
+        rowObj.value = value;
+        const description =
+          RegistryDefs.describeRow(rowObj) ||
+          `${scope} ${name} has these permissions on field "${column}" in ${table}: Usable in Global Replace`;
+
+        result.push({ keys, value, pipe, description });
+      });
+    });
+
+    return result;
+  }
+
   function renderPreview() {
     const built = currentKeysAndValue();
     els.warning.textContent = '';
@@ -440,6 +481,20 @@
     els.preview.innerHTML = '';
     els.preview.appendChild(el('p', { class: 'builder-description', text: description }));
     els.preview.appendChild(el('pre', { class: 'builder-pipe', text: pipe }));
+
+    const autoEntries = computeAutoColumnAccessEntries(built);
+    if (autoEntries.length) {
+      els.preview.appendChild(
+        el('p', {
+          class: 'builder-description',
+          text: `Also adds ${autoEntries.length} required Column Access ${autoEntries.length === 1 ? 'entry' : 'entries'}:`,
+        })
+      );
+      autoEntries.forEach((entry) => {
+        els.preview.appendChild(el('p', { class: 'builder-description', text: entry.description }));
+        els.preview.appendChild(el('pre', { class: 'builder-pipe', text: entry.pipe }));
+      });
+    }
 
     const warning = validationWarning(built);
     if (warning) {
@@ -520,8 +575,17 @@
   els.addBtn.addEventListener('click', () => {
     const pending = els.addBtn._pending;
     if (!pending) return;
+
+    const autoEntries = computeAutoColumnAccessEntries(pending);
+
     entryCounter += 1;
     builderEntries.push({ id: entryCounter, ...pending });
+
+    autoEntries.forEach((entry) => {
+      entryCounter += 1;
+      builderEntries.push({ id: entryCounter, ...entry });
+    });
+
     renderList();
   });
 

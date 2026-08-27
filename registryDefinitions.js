@@ -176,9 +176,18 @@
       label: 'Relocate tool',
       category: 'Tool',
       description:
-        'Use the Catalogue Relocation tool (bulk relocation of objects).',
+        'Use the Catalogue Relocation tool (bulk relocation of objects). Also requires Global Replace (duReplace) Column Access on the location fields it writes to.',
       requiresTable: 'ecatalogue',
       since: 'EMu 6.1',
+      requiredColumnAccess: [
+        'LocCurrentLocationRef',
+        'LocRequestedByRef',
+        'LocReleasedByRef',
+        'LocAcceptedByRef',
+        'LocDateMoved',
+        'LocTimeMoved',
+        'LocMovementNotes',
+      ],
     },
     {
       id: 'daRecondition',
