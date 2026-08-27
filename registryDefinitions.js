@@ -59,18 +59,81 @@
   // Operations privileges (Table|Operations Registry entry)
   // ---------------------------------------------------------------------
   const OPERATIONS_PRIVS = [
-    { id: 'daQuery', label: 'Search', category: 'General', description: 'Search the module.' },
-    { id: 'daDisplay', label: 'View records', category: 'General', description: 'Display records from the module.' },
-    { id: 'daEdit', label: 'Edit records', category: 'General', description: 'Edit records in the module. Without this, records returned by a search are read-only.' },
-    { id: 'daInsert', label: 'Add new records', category: 'General', description: 'Add new records to the module.' },
-    { id: 'daDelete', label: 'Delete records', category: 'General', description: 'Delete records from the module.' },
-    { id: 'daDefaults', label: 'Manage default values', category: 'General', description: 'Define sets of default values and switch which set is in use.' },
-    { id: 'daReport', label: 'Generate reports', category: 'General', description: 'Generate reports.' },
-    { id: 'daDesign', label: 'Design reports', category: 'General', description: 'Create new reports.' },
-    { id: 'daEditQuery', label: 'Edit search criteria (Texql)', category: 'Advanced', description: 'Edit the search criteria of the previous search in Texql format.' },
-    { id: 'daEditHelp', label: 'Edit field help', category: 'Advanced', description: 'Edit the field level help description.' },
-    { id: 'daSecurity', label: 'Edit Record Level Security', category: 'Advanced', description: 'Edit Record Level Security permissions on records.' },
-    { id: 'daDittoAll', label: 'Ditto all fields', category: 'Advanced', description: 'Use Edit > Ditto > All Fields (Shift+F9).' },
+    {
+      id: 'daQuery',
+      label: 'Search',
+      category: 'General',
+      description: 'Search the module.',
+    },
+    {
+      id: 'daDisplay',
+      label: 'View records',
+      category: 'General',
+      description: 'Display records from the module.',
+    },
+    {
+      id: 'daEdit',
+      label: 'Edit records',
+      category: 'General',
+      description:
+        'Edit records in the module. Without this, records returned by a search are read-only.',
+    },
+    {
+      id: 'daInsert',
+      label: 'Add new records',
+      category: 'General',
+      description: 'Add new records to the module.',
+    },
+    {
+      id: 'daDelete',
+      label: 'Delete records',
+      category: 'General',
+      description: 'Delete records from the module.',
+    },
+    {
+      id: 'daDefaults',
+      label: 'Manage default values',
+      category: 'General',
+      description:
+        'Define sets of default values and switch which set is in use.',
+    },
+    {
+      id: 'daReport',
+      label: 'Generate reports',
+      category: 'General',
+      description: 'Generate reports.',
+    },
+    {
+      id: 'daDesign',
+      label: 'Design reports',
+      category: 'General',
+      description: 'Create new reports.',
+    },
+    {
+      id: 'daEditQuery',
+      label: 'Edit search criteria (Texql)',
+      category: 'Advanced',
+      description:
+        'Edit the search criteria of the previous search in Texql format.',
+    },
+    {
+      id: 'daEditHelp',
+      label: 'Edit field help',
+      category: 'Advanced',
+      description: 'Edit the field level help description.',
+    },
+    {
+      id: 'daSecurity',
+      label: 'Edit Record Level Security',
+      category: 'Advanced',
+      description: 'Edit Record Level Security permissions on records.',
+    },
+    {
+      id: 'daDittoAll',
+      label: 'Ditto all fields',
+      category: 'Advanced',
+      description: 'Use Edit > Ditto > All Fields (Shift+F9).',
+    },
     {
       id: 'daReplace',
       label: 'Global Replace tool',
@@ -78,16 +141,42 @@
       description:
         'Use the Global Replace tool. Also grants use of the Condition Update, Re-identification, Relocation and Revaluation tools without needing those privileges individually.',
     },
-    { id: 'daImport', label: 'Import tool', category: 'Tool', description: 'Use the Import tool.' },
-    { id: 'daExport', label: 'Export Schedules', category: 'Tool', description: 'Use the Export Schedules facility.' },
-    { id: 'daMerge', label: 'Merge Records tool', category: 'Tool', description: 'Use the Merge Records tool.' },
-    { id: 'daRecall', label: 'Record Recall', category: 'Tool', description: 'Use the Record Recall facility.' },
-    { id: 'daTemplates', label: 'Record Templates', category: 'Tool', description: 'Create a Record Template in the module.' },
+    {
+      id: 'daImport',
+      label: 'Import tool',
+      category: 'Tool',
+      description: 'Use the Import tool.',
+    },
+    {
+      id: 'daExport',
+      label: 'Export Schedules',
+      category: 'Tool',
+      description: 'Use the Export Schedules facility.',
+    },
+    {
+      id: 'daMerge',
+      label: 'Merge Records tool',
+      category: 'Tool',
+      description: 'Use the Merge Records tool.',
+    },
+    {
+      id: 'daRecall',
+      label: 'Record Recall',
+      category: 'Tool',
+      description: 'Use the Record Recall facility.',
+    },
+    {
+      id: 'daTemplates',
+      label: 'Record Templates',
+      category: 'Tool',
+      description: 'Create a Record Template in the module.',
+    },
     {
       id: 'daRelocate',
       label: 'Relocate tool',
       category: 'Tool',
-      description: 'Use the Catalogue Relocation tool (bulk relocation of objects).',
+      description:
+        'Use the Catalogue Relocation tool (bulk relocation of objects).',
       requiresTable: 'ecatalogue',
       since: 'EMu 6.1',
     },
@@ -134,9 +223,19 @@
     fullAccess: {
       label: 'Full access (all standard privileges)',
       privs: [
-        'daQuery', 'daDisplay', 'daEdit', 'daInsert', 'daDelete', 'daReplace',
-        'daDefaults', 'daReport', 'daDesign', 'daEditQuery', 'daEditHelp',
-        'daSecurity', 'daImport',
+        'daQuery',
+        'daDisplay',
+        'daEdit',
+        'daInsert',
+        'daDelete',
+        'daReplace',
+        'daDefaults',
+        'daReport',
+        'daDesign',
+        'daEditQuery',
+        'daEditHelp',
+        'daSecurity',
+        'daImport',
       ],
     },
   };
@@ -148,17 +247,47 @@
   // Column Access privileges (Table|Column Access Registry entry)
   // ---------------------------------------------------------------------
   const COLUMN_ACCESS_PRIVS = [
-    { id: 'dvDisplay', label: 'View while displaying', description: 'The column can be viewed when displaying records.' },
-    { id: 'dvEdit', label: 'View while editing', description: 'The column can be viewed when editing records.' },
-    { id: 'duEdit', label: 'Update while editing', description: 'The column can be updated (changed) when editing records.' },
-    { id: 'dvInsert', label: 'View while inserting', description: 'The column can be viewed when inserting new records.' },
-    { id: 'duInsert', label: 'Update while inserting', description: 'The column can be updated when inserting new records.' },
-    { id: 'dvQuery', label: 'View while searching', description: 'The column can be viewed when entering search terms.' },
-    { id: 'duQuery', label: 'Update while searching', description: 'The column can be searched on (a term can be entered) when entering search terms.' },
+    {
+      id: 'dvDisplay',
+      label: 'View while displaying',
+      description: 'The column can be viewed when displaying records.',
+    },
+    {
+      id: 'dvEdit',
+      label: 'View while editing',
+      description: 'The column can be viewed when editing records.',
+    },
+    {
+      id: 'duEdit',
+      label: 'Update while editing',
+      description: 'The column can be updated (changed) when editing records.',
+    },
+    {
+      id: 'dvInsert',
+      label: 'View while inserting',
+      description: 'The column can be viewed when inserting new records.',
+    },
+    {
+      id: 'duInsert',
+      label: 'Update while inserting',
+      description: 'The column can be updated when inserting new records.',
+    },
+    {
+      id: 'dvQuery',
+      label: 'View while searching',
+      description: 'The column can be viewed when entering search terms.',
+    },
+    {
+      id: 'duQuery',
+      label: 'Update while searching',
+      description:
+        'The column can be searched on (a term can be entered) when entering search terms.',
+    },
     {
       id: 'duReplace',
       label: 'Usable in Global Replace',
-      description: 'The column may be used for a global replace / edit. Also requires the daReplace Operations privilege.',
+      description:
+        'The column may be used for a global replace / edit. Also requires the daReplace Operations privilege.',
     },
   ];
 
@@ -169,7 +298,16 @@
     },
     viewAndEdit: {
       label: 'View & edit',
-      privs: ['dvDisplay', 'dvEdit', 'dvInsert', 'dvQuery', 'duEdit', 'duInsert', 'duQuery', 'duReplace'],
+      privs: [
+        'dvDisplay',
+        'dvEdit',
+        'dvInsert',
+        'dvQuery',
+        'duEdit',
+        'duInsert',
+        'duQuery',
+        'duReplace',
+      ],
     },
     hidden: {
       // Per the manual: an entry with no privileges is a syntax error. The
@@ -223,7 +361,9 @@
       pattern: ['Table', '*table', 'Operations'],
       describe(ctx) {
         const privs = splitList(ctx.value);
-        const friendly = privs.map((p) => (OPERATIONS_BY_ID[p] ? OPERATIONS_BY_ID[p].label : p));
+        const friendly = privs.map((p) =>
+          OPERATIONS_BY_ID[p] ? OPERATIONS_BY_ID[p].label : p,
+        );
         return `${ctx.scope} ${ctx.name} can do the following in ${tableLabel(ctx.captures.table)}: ${friendly.join(', ')}`;
       },
     },
@@ -234,8 +374,15 @@
       pattern: ['Table', '*table', 'Column Access', '*column'],
       describe(ctx) {
         const privs = splitList(ctx.value);
-        const friendly = privs.map((p) => (p === 'Default' ? p : (COLUMN_ACCESS_PRIVS.find((c) => c.id === p) || {}).label || p));
-        const colLabel = ctx.captures.column === 'Default' ? 'all fields by default' : `field "${ctx.captures.column}"`;
+        const friendly = privs.map((p) =>
+          p === 'Default'
+            ? p
+            : (COLUMN_ACCESS_PRIVS.find((c) => c.id === p) || {}).label || p,
+        );
+        const colLabel =
+          ctx.captures.column === 'Default'
+            ? 'all fields by default'
+            : `field "${ctx.captures.column}"`;
         return `${ctx.scope} ${ctx.name} has these permissions on ${colLabel} in ${tableLabel(ctx.captures.table)}: ${friendly.join(', ')}`;
       },
     },
@@ -243,10 +390,16 @@
       id: 'column_access_modifier',
       label: 'Column Access Modifier (conditional field permissions)',
       scopes: ['User', 'Group'],
-      pattern: ['Table', '*table', 'Column Access Modifier', '*column', '*matchValue'],
+      pattern: [
+        'Table',
+        '*table',
+        'Column Access Modifier',
+        '*column',
+        '*matchValue',
+      ],
       describe(ctx) {
         return `${ctx.scope} ${ctx.name}: in ${tableLabel(ctx.captures.table)}, when "${ctx.captures.column}" is ${describeMatchValue(
-          ctx.captures.matchValue
+          ctx.captures.matchValue,
         )}, apply: ${ctx.value}`;
       },
     },
@@ -256,7 +409,7 @@
       scopes: ['User', 'Group'],
       pattern: ['Table', '*table', 'Tabs', 'Default'],
       describe(ctx) {
-        return `${ctx.scope} ${ctx.name}'s default tabs in ${tableLabel(ctx.captures.table)}: ${ctx.value}`;
+        return `${ctx.scope} ${ctx.name}'s default tabs in ${tableLabel(ctx.captures.table)}: ${formatListForWrap(ctx.value)}`;
       },
     },
     {
@@ -266,8 +419,8 @@
       pattern: ['Table', '*table', 'Tabs', '*column', '*matchValue'],
       describe(ctx) {
         return `${ctx.scope} ${ctx.name}: in ${tableLabel(ctx.captures.table)}, when "${ctx.captures.column}" is ${describeMatchValue(
-          ctx.captures.matchValue
-        )}, show tabs: ${ctx.value}`;
+          ctx.captures.matchValue,
+        )}, show tabs: ${formatListForWrap(ctx.value)}`;
       },
     },
     {
@@ -276,7 +429,7 @@
       scopes: ['User', 'Group'],
       pattern: ['Table', '*table', 'Insert Tab Order', '*name'],
       describe(ctx) {
-        return `${ctx.scope} ${ctx.name}: tab order "${ctx.captures.name}" in ${tableLabel(ctx.captures.table)} (Display/New/Edit modes): ${ctx.value}`;
+        return `${ctx.scope} ${ctx.name}: tab order "${ctx.captures.name}" in ${tableLabel(ctx.captures.table)} (Display/New/Edit modes): ${formatListForWrap(ctx.value)}`;
       },
     },
     {
@@ -285,7 +438,7 @@
       scopes: ['User', 'Group'],
       pattern: ['Table', '*table', 'Query Tab Order', '*name'],
       describe(ctx) {
-        return `${ctx.scope} ${ctx.name}: tab order "${ctx.captures.name}" in ${tableLabel(ctx.captures.table)} (Search mode): ${ctx.value}`;
+        return `${ctx.scope} ${ctx.name}: tab order "${ctx.captures.name}" in ${tableLabel(ctx.captures.table)} (Search mode): ${formatListForWrap(ctx.value)}`;
       },
     },
   ];
@@ -302,6 +455,13 @@
       .split(';')
       .map((s) => s.trim())
       .filter(Boolean);
+  }
+
+  function formatListForWrap(value) {
+    const items = splitList(value);
+    if (!items.length)
+      return value === undefined || value === null ? '' : String(value);
+    return items.join(', ');
   }
 
   // ---------------------------------------------------------------------
@@ -356,7 +516,12 @@
   function describeRow(row) {
     const match = classifyRow(row);
     if (!match) return null;
-    const ctx = { scope: match.scope, name: match.name, captures: match.captures, value: match.value };
+    const ctx = {
+      scope: match.scope,
+      name: match.name,
+      captures: match.captures,
+      value: match.value,
+    };
     try {
       return match.entryType.describe(ctx);
     } catch (e) {
@@ -379,7 +544,9 @@
   }
 
   function toPipeString(keys, value) {
-    return keys.filter((k) => k !== undefined && k !== '').join('|') + '|' + value;
+    return (
+      keys.filter((k) => k !== undefined && k !== '').join('|') + '|' + value
+    );
   }
 
   // ---------------------------------------------------------------------
